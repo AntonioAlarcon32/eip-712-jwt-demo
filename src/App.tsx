@@ -10,6 +10,15 @@ import { EthrDID } from "ethr-did";
 import { mainnet, sepolia } from "@reown/appkit/networks";
 import { Provider } from "ethers";
 import { Eip712Signer, Eip712Verifier } from "did-jwt-eip712-signer";
+import {
+  createVerifiableCredentialJwt,
+  createVerifiablePresentationJwt,
+  Issuer,
+  JwtCredentialPayload,
+  JwtPresentationPayload,
+  verifyCredential,
+  verifyPresentation,
+} from "did-jwt-vc";
 
 declare global {
   interface Window {
@@ -26,8 +35,10 @@ function App() {
   const [signer, setSigner] = useState<Signer | null>(null);
   const [vcJwt, setVcJwt] = useState("");
   const [verificationResponse, setVerificationResponse] = useState("");
-  const [decodedVcJwt, setDecodedVcJwt] = useState("");
   const [validationState, setValidationState] = useState("");
+  const [vpJwt, setVpJwt] = useState("");
+  const [validationStateVp, setValidationStateVp] = useState("");
+  const [decodedVp, setDecodedVp] = useState("");
 
   const domain: TypedDataDomain = {
     name: "Verifiable Credential",
@@ -107,16 +118,40 @@ function App() {
     }
     const classSigner = new Eip712Signer(signer);
 
-    const jwt = await createJWT(
-      {
-        aud: "did:ethr:sepolia:" + selectedAccount,
-        name: "uPort Developer",
-        domain: domain,
+    const issuer = {
+      did: "did:ethr:sepolia:" + selectedAccount,
+      alg: "EIP712",
+      signer: classSigner,
+    } as Issuer;
+
+    const vcPayload: JwtCredentialPayload = {
+      sub: "did:ethr:0x435df3eda57154cf8cf7926079881f2912f54db4",
+      nbf: 1562950282,
+      vc: {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        type: ["VerifiableCredential"],
+        credentialSubject: {
+          degree: {
+            type: "BachelorDegree",
+            name: "Baccalauréat en musiques numériques",
+          },
+        },
       },
-      { issuer: "did:ethr:sepolia:" + selectedAccount, signer: classSigner },
-      { typ: "JWT", alg: "EIP712" }
-    );
-    setVcJwt(jwt);
+      domain: domain,
+    };
+
+    const vcJwt = await createVerifiableCredentialJwt(vcPayload, issuer);
+    setVcJwt(vcJwt);
+    // const jwt = await createJWT(
+    //   {
+    //     aud: "did:ethr:sepolia:" + selectedAccount,
+    //     name: "uPort Developer",
+    //     domain: domain,
+    //   },
+    //   { issuer: "did:ethr:sepolia:" + selectedAccount, signer: classSigner },
+    //   { typ: "JWT", alg: "EIP712" }
+    // );
+    // setVcJwt(jwt);
   }
 
   async function verifyVC() {
@@ -125,19 +160,61 @@ function App() {
       return;
     }
     const classVerifier = new Eip712Verifier();
-    try {
-    const verifiedVC = await verifyJWT(vcJwt, { resolver, audience: "did:ethr:sepolia:" + selectedAccount }, classVerifier);
-    console.log(verifiedVC);
+    const verifiedVC = await verifyCredential(
+      vcJwt,
+      resolver,
+      undefined,
+      classVerifier
+    );
     setValidationState(JSON.stringify(verifiedVC, null, 4));
-    } catch (error) {
-      if (error.message === "JWT audience does not match your DID") {
-        console.log("JWT audience does not match your DID");
-      }
-      else if (error.message === "Error: Signature verification failed") {
-        console.log("Signature verification failed");
-      }
+    setDecodedJwt(JSON.stringify(decodeJWT(vcJwt), null, 4));
+    // const verifiedVC = await verifyJWT(vcJwt, { resolver, audience: "did:ethr:sepolia:" + selectedAccount }, classVerifier);
+    // console.log(verifiedVC);
+    // setValidationState(JSON.stringify(verifiedVC, null, 4));
+  }
+
+  async function createVP() {
+    if (!signer) {
+      console.error("Not connected to MetaMask");
+      return;
     }
-    
+    const classSigner = new Eip712Signer(signer);
+
+    const issuer = {
+      did: "did:ethr:sepolia:" + selectedAccount,
+      alg: "EIP712",
+      signer: classSigner,
+    } as Issuer;
+
+    const vpPayload: JwtPresentationPayload = {
+      vp: {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        type: ["VerifiablePresentation"],
+        verifiableCredential: [vcJwt],
+      },
+      domain,
+    };
+    const vpJwt = await createVerifiablePresentationJwt(vpPayload, issuer);
+    setVpJwt(vpJwt);
+  }
+
+  async function verifyVP() {
+    if (!resolver) {
+      console.error("Resolver not set");
+      return;
+    }
+    const classVerifier = new Eip712Verifier();
+    const verifiedVP = await verifyPresentation(
+      vpJwt,
+      resolver,
+      undefined,
+      classVerifier
+    );
+
+    console.log(verifiedVP);
+    setValidationStateVp(JSON.stringify(verifiedVP, null, 4));
+    setDecodedVp(JSON.stringify(decodeJWT(vpJwt), null, 4));
+
   }
 
   return (
@@ -178,6 +255,18 @@ function App() {
           <button onClick={verifyVC}>Validate VC</button>
           <div style={{ marginBottom: "20px" }}></div>
           <text>{validationState}</text>
+          <div style={{ marginBottom: "20px" }}></div>
+          <text>{decodedJwt}</text>
+          <div style={{ marginBottom: "20px" }}></div>
+          <button onClick={createVP}>Create VP</button>
+          <div style={{ marginBottom: "20px" }}></div>
+          <text>{vpJwt}</text>
+          <div style={{ marginBottom: "20px" }}></div>
+          <button onClick={verifyVP}>Validate VP</button>
+          <div style={{ marginBottom: "20px" }}></div>
+          <text>{validationStateVp}</text>
+          <div style={{ marginBottom: "20px" }}></div>
+          <text>{decodedVp}</text>
         </>
       )}
     </>

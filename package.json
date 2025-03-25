@@ -12,10 +12,10 @@
   "dependencies": {
     "@metamask/providers": "^20.0.0",
     "@reown/appkit": "^1.7.0",
-    "did-jwt": "github:AntonioAlarcon32/improved-did-jwt",
+    "did-jwt": "github:AntonioAlarcon32/did-jwt#dist",
     "did-jwt-eip712-signer": "github:AntonioAlarcon32/did-jwt-eip712-signer",
+    "did-jwt-vc": "github:AntonioAlarcon32/did-jwt-vc",
     "did-resolver": "^4.1.0",
-    "eip-712-signer": "link:../eip-712-signer",
     "ethers": "^6.13.5",
     "ethr-did-resolver": "^11.0.3",
     "react": "^19.0.0",

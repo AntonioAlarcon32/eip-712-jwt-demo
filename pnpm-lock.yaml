@@ -15,17 +15,17 @@ importers:
         specifier: ^1.7.0
         version: 1.7.0(@types/react@19.0.11)(react@19.0.0)(typescript@5.7.3)(zod@3.22.4)
       did-jwt:
-        specifier: github:AntonioAlarcon32/improved-did-jwt
-        version: https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/975acb8bc5a0ed36ee75faa80381067fe8ee4a90
+        specifier: github:AntonioAlarcon32/did-jwt#dist
+        version: https://codeload.github.com/AntonioAlarcon32/did-jwt/tar.gz/3ed57b644c5e0b8940b96dca43f8f5ae874bb3b7
       did-jwt-eip712-signer:
         specifier: github:AntonioAlarcon32/did-jwt-eip712-signer
         version: https://codeload.github.com/AntonioAlarcon32/did-jwt-eip712-signer/tar.gz/e60512aad2444c0733c1eff87266cb3d3ac848b5
+      did-jwt-vc:
+        specifier: github:AntonioAlarcon32/did-jwt-vc
+        version: https://codeload.github.com/AntonioAlarcon32/did-jwt-vc/tar.gz/c02f41480c33d272db70aaee5e451190e8d9947e
       did-resolver:
         specifier: ^4.1.0
         version: 4.1.0
-      eip-712-signer:
-        specifier: link:../eip-712-signer
-        version: link:../eip-712-signer
       ethers:
         specifier: ^6.13.5
         version: 6.13.5
@@ -939,8 +939,17 @@ packages:
     resolution: {tarball: https://codeload.github.com/AntonioAlarcon32/did-jwt-eip712-signer/tar.gz/e60512aad2444c0733c1eff87266cb3d3ac848b5}
     version: 0.9.4
 
-  did-jwt@https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/975acb8bc5a0ed36ee75faa80381067fe8ee4a90:
-    resolution: {tarball: https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/975acb8bc5a0ed36ee75faa80381067fe8ee4a90}
+  did-jwt-vc@https://codeload.github.com/AntonioAlarcon32/did-jwt-vc/tar.gz/c02f41480c33d272db70aaee5e451190e8d9947e:
+    resolution: {tarball: https://codeload.github.com/AntonioAlarcon32/did-jwt-vc/tar.gz/c02f41480c33d272db70aaee5e451190e8d9947e}
+    version: 4.0.7
+    engines: {node: '>=18'}
+
+  did-jwt@https://codeload.github.com/AntonioAlarcon32/did-jwt/tar.gz/3ed57b644c5e0b8940b96dca43f8f5ae874bb3b7:
+    resolution: {tarball: https://codeload.github.com/AntonioAlarcon32/did-jwt/tar.gz/3ed57b644c5e0b8940b96dca43f8f5ae874bb3b7}
+    version: 8.0.9
+
+  did-jwt@https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/aad2d085de00341582ad5a0b591beb5284ba869c:
+    resolution: {tarball: https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/aad2d085de00341582ad5a0b591beb5284ba869c}
     version: 8.0.8
 
   did-resolver@4.1.0:
@@ -2976,14 +2985,31 @@ snapshots:
   did-jwt-eip712-signer@https://codeload.github.com/AntonioAlarcon32/did-jwt-eip712-signer/tar.gz/e60512aad2444c0733c1eff87266cb3d3ac848b5:
     dependencies:
       '@juanelas/solidity-types-from-json': 1.0.1
-      did-jwt: https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/975acb8bc5a0ed36ee75faa80381067fe8ee4a90
+      did-jwt: https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/aad2d085de00341582ad5a0b591beb5284ba869c
       did-resolver: 4.1.0
       ethers: 6.13.5
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  did-jwt@https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/975acb8bc5a0ed36ee75faa80381067fe8ee4a90:
+  did-jwt-vc@https://codeload.github.com/AntonioAlarcon32/did-jwt-vc/tar.gz/c02f41480c33d272db70aaee5e451190e8d9947e:
+    dependencies:
+      did-jwt: https://codeload.github.com/AntonioAlarcon32/did-jwt/tar.gz/3ed57b644c5e0b8940b96dca43f8f5ae874bb3b7
+      did-resolver: 4.1.0
+
+  did-jwt@https://codeload.github.com/AntonioAlarcon32/did-jwt/tar.gz/3ed57b644c5e0b8940b96dca43f8f5ae874bb3b7:
+    dependencies:
+      '@noble/ciphers': 1.2.1
+      '@noble/curves': 1.8.1
+      '@noble/hashes': 1.7.1
+      '@scure/base': 1.2.4
+      canonicalize: 2.1.0
+      did-resolver: 4.1.0
+      multibase: 4.0.6
+      multiformats: 9.9.0
+      uint8arrays: 3.1.1
+
+  did-jwt@https://codeload.github.com/AntonioAlarcon32/improved-did-jwt/tar.gz/aad2d085de00341582ad5a0b591beb5284ba869c:
     dependencies:
       '@noble/ciphers': 1.2.1
       '@noble/curves': 1.8.1
