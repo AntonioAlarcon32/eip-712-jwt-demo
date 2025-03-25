@@ -26,5 +26,5 @@ A React application for demonstrating Decentralized Identifiers (DIDs), Verifiab
   ```
 3. Start the development server
   ```bash
-   pnpm run dev
+  pnpm run dev
   ```
