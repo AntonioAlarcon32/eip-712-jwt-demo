@@ -22,23 +22,15 @@ import {
 import{ sepolia, mainnet }from "./config/appkit"; // Import the appkit configuration
 import { WalletConnectButton } from "./WalletConnectButton"; // Import the new component
 import "./App.css";
+import { REGISTRIES, DOMAIN, type AccountInfo } from "./types"; // Import the types and constants
 
-interface AccountInfo {
-  signer: Signer;
-  address: string;
-}
-
-const domain: TypedDataDomain = {
-  name: "Verifiable Credential",
-  version: "1",
-  chainId: sepolia.id, // Sepolia testnet
-};
 
 async function prepareVCCreation(selectedAccount: AccountInfo) {
   if (!selectedAccount) {
     console.error("Not connected to MetaMask");
     return;
   }
+  
   const classSigner = new Eip712Signer(selectedAccount.signer);
 
   const issuer = {
@@ -60,7 +52,7 @@ async function prepareVCCreation(selectedAccount: AccountInfo) {
         },
       },
     },
-    domain: domain,
+    domain: DOMAIN,
   };
   const vcJwt = await createVerifiableCredentialJwt(vcPayload, issuer);
   return { vcJwt, issuer };
@@ -128,11 +120,6 @@ function App() {
     fetchAndSetAccounts().catch(console.error); // Execute the async function
   }, [provider]); // This effect runs only when the provider changes
 
-  const registries = {
-    mainnet: "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b",
-    sepolia: "0x03d5003bf0e79c5f5223588f347eba39afbc3818",
-  };
-
   async function handleAccountSelection(account: AccountInfo) {
     if (!provider) {
       console.error("Provider is not set");
@@ -147,7 +134,7 @@ function App() {
           type: "testnet",
           //@ts-expect-error types
           provider: provider,
-          registry: registries.sepolia,
+          registry: REGISTRIES.sepolia, // Use the constant from types
         },
       ],
     });
@@ -216,7 +203,7 @@ function App() {
         verifiableCredential: [vcJwt],
       },
 
-      domain,
+      domain: DOMAIN,
     };
 
     const vpJwt = await createVerifiablePresentationJwt(vpPayload, issuer);
