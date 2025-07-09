@@ -207,10 +207,14 @@ function App() {
 
   const handleCreateVP = async () => {
     if (!signer || !vcJwt) return;
+    if (!network || !network.chainId) {
+      console.error("Network not available or chainId is missing");
+      return;
+    }
 
     setLoadingStates(prev => ({ ...prev, creatingVP: true }));
     try {
-      const vpJwtResult = await createVerifiablePresentation(signer, vcJwt);
+      const vpJwtResult = await createVerifiablePresentation(signer, vcJwt, network);
       setVpJwt(vpJwtResult);
     } catch (error) {
       console.error("Error creating VP:", error);

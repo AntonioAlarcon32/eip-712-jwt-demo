@@ -66,18 +66,41 @@ export const createVerifiableCredential = async (account: AccountInfo, network: 
 
 export const createVerifiablePresentation = async (
   account: AccountInfo,
-  vcJwt: string
+  vcJwt: string,
+  network: Network
 ) => {
+
+    if (!account.address) {
+    throw new Error("Account address is required to create a Verifiable Credential");
+    }
+    if (!account.signer.provider) {
+    throw new Error("Account signer provider is required to create a Verifiable Credential");
+    }
+    if (!network || !network.chainId) {
+    throw new Error("Network not available or chainId is missing");
+    }
+    let did: string;
+    let domain: TypedDataDomain;
+
+
+    if (network.name === "sepolia") { // Sepolia
+        did = `did:ethr:sepolia:${account.address}`;
+        domain = DOMAIN_SEPOLIA;
+        }
+    else if (network.name === "mainnet") { // Mainnet
+        did = `did:ethr:${account.address}`;
+        domain = DOMAIN_MAINNET;
+        }
+    else {
+        throw new Error("Unsupported network for DID creation");
+    }
   const classSigner = new Eip712Signer(account.signer);
 
   const issuer: Issuer = {
-    did: `did:ethr:sepolia:${account.address}`,
+    did: did,
     alg: "EIP712",
     signer: classSigner,
   };
-
-  const chain = account.signer.provider?.network?.name;
-  const domain = chain === "mainnet" ? DOMAIN_MAINNET : DOMAIN_SEPOLIA;
 
   const vpPayload: JwtPresentationPayload = {
     vp: {
