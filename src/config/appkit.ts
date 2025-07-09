@@ -15,6 +15,7 @@ const metadata = {
 
 export const appKit = createAppKit({
   adapters: [new EthersAdapter()],
+  //@ts-expect-error types
   networks,
   metadata,
   projectId,

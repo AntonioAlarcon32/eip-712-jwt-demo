@@ -1,62 +1,26 @@
 // src/App.tsx
 
 import { useState, useEffect } from "react";
-import { createAppKit, useAppKitAccount } from "@reown/appkit/react";
-import { EthersAdapter } from "@reown/appkit-adapter-ethers";
 import { BrowserProvider, type Signer, type TypedDataDomain } from "ethers";
-import { createJWT, decodeJWT, verifyJWT } from "did-jwt";
+import { decodeJWT } from "did-jwt";
 import { Resolver } from "did-resolver";
 import { getResolver } from "ethr-did-resolver";
-import { EthrDID } from "ethr-did";
 import { Eip712Signer, Eip712Verifier } from "did-jwt-eip712-signer";
 import {
   createVerifiableCredentialJwt,
   createVerifiablePresentationJwt,
-  Issuer,
-  JwtCredentialPayload,
-  JwtPresentationPayload,
+  type Issuer,
+  type JwtCredentialPayload,
+  type JwtPresentationPayload,
   verifyCredential,
   verifyPresentation,
 } from "did-jwt-vc";
 
-import{ sepolia, mainnet }from "./config/appkit"; // Import the appkit configuration
 import { WalletConnectButton } from "./WalletConnectButton"; // Import the new component
 import "./App.css";
 import { REGISTRIES, DOMAIN, type AccountInfo } from "./types"; // Import the types and constants
+import { createVerifiableCredential, createVerifiablePresentation } from "./services/credentialService"; // Import the credential service
 
-
-async function prepareVCCreation(selectedAccount: AccountInfo) {
-  if (!selectedAccount) {
-    console.error("Not connected to MetaMask");
-    return;
-  }
-  
-  const classSigner = new Eip712Signer(selectedAccount.signer);
-
-  const issuer = {
-    did: "did:ethr:sepolia:" + selectedAccount.address,
-    alg: "EIP712",
-    signer: classSigner,
-  } as Issuer;
-
-  const vcPayload: JwtCredentialPayload = {
-    sub: "did:ethr:0x435df3eda57154cf8cf7926079881f2912f54db4",
-    nbf: 1562950282,
-    vc: {
-      "@context": ["https://www.w3.org/2018/credentials/v1"],
-      type: ["VerifiableCredential"],
-      credentialSubject: {
-        degree: {
-          type: "BachelorDegree",
-          name: "Baccalauréat en musiques numériques",
-        },
-      },
-    },
-    domain: DOMAIN,
-  };
-  const vcJwt = await createVerifiableCredentialJwt(vcPayload, issuer);
-  return { vcJwt, issuer };
-}
 
 function App() {
   // State to hold the provider instance, controlled by the child component
@@ -177,40 +141,6 @@ function App() {
     // setValidationState(JSON.stringify(verifiedVC, null, 4));
   }
 
-  async function createVP() {
-    if (!signer) {
-      console.error("Not connected to MetaMask");
-
-      return;
-    }
-
-    const classSigner = new Eip712Signer(signer.signer);
-
-    const issuer = {
-      did: "did:ethr:sepolia:" + signer.address,
-
-      alg: "EIP712",
-
-      signer: classSigner,
-    } as Issuer;
-
-    const vpPayload: JwtPresentationPayload = {
-      vp: {
-        "@context": ["https://www.w3.org/2018/credentials/v1"],
-
-        type: ["VerifiablePresentation"],
-
-        verifiableCredential: [vcJwt],
-      },
-
-      domain: DOMAIN,
-    };
-
-    const vpJwt = await createVerifiablePresentationJwt(vpPayload, issuer);
-
-    setVpJwt(vpJwt);
-  }
-
   async function verifyVP() {
     if (!resolver) {
       console.error("Resolver not set");
@@ -219,14 +149,12 @@ function App() {
     }
 
     const classVerifier = new Eip712Verifier();
+    console.log("VP JWT:", vpJwt);
 
     const verifiedVP = await verifyPresentation(
       vpJwt,
-
       resolver,
-
       undefined,
-
       classVerifier
     );
 
@@ -284,7 +212,7 @@ function App() {
             console.error("Not connected");
             return;
           }
-          prepareVCCreation(signer)
+          createVerifiableCredential(signer)
             .then((result) => {
               if (!result) {
                 console.error("Failed to create VC");
@@ -311,7 +239,26 @@ function App() {
       <div style={{ marginBottom: "20px" }}></div>
       <text>{decodedJwt}</text>
       <div style={{ marginBottom: "20px" }}></div>
-      <button onClick={createVP}>Create VP</button>
+      <button
+        onClick={() => {
+          if (!signer) {
+            console.error("Not connected");
+            return;
+          }
+          createVerifiablePresentation(signer, vcJwt)
+            .then((result) => {
+              if (!result) {
+                console.error("Failed to create VP");
+                return;
+              }
+              setVpJwt(result);
+              console.log("VP JWT:", vpJwt);
+            })
+            .catch(console.error);
+        }}
+      >
+        VP Creation
+      </button>
       <div style={{ marginBottom: "20px" }}></div>
       <text>{vpJwt}</text>
       <div style={{ marginBottom: "20px" }}></div>
