@@ -10,8 +10,14 @@ export const REGISTRIES = {
   sepolia: "0x03d5003bf0e79c5f5223588f347eba39afbc3818",
 } as const;
 
-export const DOMAIN: TypedDataDomain = {
+export const DOMAIN_SEPOLIA: TypedDataDomain = {
   name: "Verifiable Credential",
   version: "1",
   chainId: 11155111, // Sepolia testnet
+};
+
+export const DOMAIN_MAINNET: TypedDataDomain = {
+  name: "Verifiable Credential",
+  version: "1",
+  chainId: 1, // Sepolia testnet
 };
