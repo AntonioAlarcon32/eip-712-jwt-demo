@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { createAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { EthersAdapter } from "@reown/appkit-adapter-ethers";
-import { mainnet, sepolia } from "@reown/appkit/networks";
 import { BrowserProvider, type Signer, type TypedDataDomain } from "ethers";
 import { createJWT, decodeJWT, verifyJWT } from "did-jwt";
 import { Resolver } from "did-resolver";
@@ -20,31 +19,9 @@ import {
   verifyPresentation,
 } from "did-jwt-vc";
 
+import{ sepolia, mainnet }from "./config/appkit"; // Import the appkit configuration
 import { WalletConnectButton } from "./WalletConnectButton"; // Import the new component
 import "./App.css";
-
-const projectId = import.meta.env.VITE_PROJECT_ID; // Ensure you have this in your .env.local file
-
-// 2. Set the networks
-const networks = [sepolia, mainnet];
-
-// 3. Create a metadata object - optional
-const metadata = {
-  name: "My Website",
-  description: "My Website description",
-  url: "https://mywebsite.com", // origin must match your domain & subdomain
-  icons: ["https://avatars.mywebsite.com/"],
-};
-
-createAppKit({
-  adapters: [new EthersAdapter()],
-  networks,
-  metadata,
-  projectId,
-  features: {
-    analytics: true, // Optional - defaults to your Cloud configuration
-  },
-});
 
 interface AccountInfo {
   signer: Signer;
