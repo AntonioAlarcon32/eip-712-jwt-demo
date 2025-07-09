@@ -1,0 +1,38 @@
+{
+  "name": "reown-didjwt-demo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@reown/appkit": "^1.7.13",
+    "@reown/appkit-adapter-ethers": "^1.7.13",
+    "did-jwt": "github:AntonioAlarcon32/did-jwt#dist",
+    "did-jwt-eip712-signer": "github:AntonioAlarcon32/did-jwt-eip712-signer",
+    "did-jwt-vc": "github:AntonioAlarcon32/did-jwt-vc",
+    "did-resolver": "^4.1.0",
+    "ethers": "^6.15.0",
+    "ethr-did": "^3.0.38",
+    "ethr-did-resolver": "^11.0.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react-swc": "^3.10.2",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.35.1",
+    "vite": "^7.0.3"
+  }
+}
