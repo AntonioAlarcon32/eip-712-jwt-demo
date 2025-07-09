@@ -1,18 +1,24 @@
 // src/App.tsx
 
 import { useState, useEffect } from "react";
-import {
-  createAppKit,
-  useAppKitAccount,
-} from "@reown/appkit/react";
+import { createAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { EthersAdapter } from "@reown/appkit-adapter-ethers";
 import { mainnet, sepolia } from "@reown/appkit/networks";
-import { BrowserProvider, type Signer, type TypedDataDomain, } from "ethers";
+import { BrowserProvider, type Signer, type TypedDataDomain } from "ethers";
 import { createJWT, decodeJWT, verifyJWT } from "did-jwt";
 import { Resolver } from "did-resolver";
 import { getResolver } from "ethr-did-resolver";
 import { EthrDID } from "ethr-did";
 import { Eip712Signer, Eip712Verifier } from "did-jwt-eip712-signer";
+import {
+  createVerifiableCredentialJwt,
+  createVerifiablePresentationJwt,
+  Issuer,
+  JwtCredentialPayload,
+  JwtPresentationPayload,
+  verifyCredential,
+  verifyPresentation,
+} from "did-jwt-vc";
 
 import { WalletConnectButton } from "./WalletConnectButton"; // Import the new component
 import "./App.css";
@@ -45,6 +51,44 @@ interface AccountInfo {
   address: string;
 }
 
+const domain: TypedDataDomain = {
+  name: "Verifiable Credential",
+  version: "1",
+  chainId: sepolia.id, // Sepolia testnet
+};
+
+async function prepareVCCreation(selectedAccount: AccountInfo) {
+  if (!selectedAccount) {
+    console.error("Not connected to MetaMask");
+    return;
+  }
+  const classSigner = new Eip712Signer(selectedAccount.signer);
+
+  const issuer = {
+    did: "did:ethr:sepolia:" + selectedAccount.address,
+    alg: "EIP712",
+    signer: classSigner,
+  } as Issuer;
+
+  const vcPayload: JwtCredentialPayload = {
+    sub: "did:ethr:0x435df3eda57154cf8cf7926079881f2912f54db4",
+    nbf: 1562950282,
+    vc: {
+      "@context": ["https://www.w3.org/2018/credentials/v1"],
+      type: ["VerifiableCredential"],
+      credentialSubject: {
+        degree: {
+          type: "BachelorDegree",
+          name: "Baccalauréat en musiques numériques",
+        },
+      },
+    },
+    domain: domain,
+  };
+  const vcJwt = await createVerifiableCredentialJwt(vcPayload, issuer);
+  return { vcJwt, issuer };
+}
+
 function App() {
   // State to hold the provider instance, controlled by the child component
   const [provider, setProvider] = useState<BrowserProvider | null>(null);
@@ -61,7 +105,7 @@ function App() {
   const [decodedVp, setDecodedVp] = useState("");
 
   // Effect to log the provider whenever it changes
-    // Effect to handle provider changes and fetch accounts
+  // Effect to handle provider changes and fetch accounts
   useEffect(() => {
     // Define an async function inside the effect
     const fetchAndSetAccounts = async () => {
@@ -85,17 +129,16 @@ function App() {
 
         // Setup the resolver once the provider is available
         const ethrDidResolver = getResolver({
-            networks: [
-              {
-                name: "sepolia",
-                // @ts-expect-error - Ethers provider type mismatch with did-resolver is a common issue
-                provider: provider, 
-              },
-            ],
-          });
+          networks: [
+            {
+              name: "sepolia",
+              // @ts-expect-error - Ethers provider type mismatch with did-resolver is a common issue
+              provider: provider,
+            },
+          ],
+        });
         const didResolver = new Resolver(ethrDidResolver);
         setResolver(didResolver);
-
       } else {
         console.log("Ethers Provider is null");
         // Reset all related state on disconnect
@@ -107,12 +150,6 @@ function App() {
 
     fetchAndSetAccounts().catch(console.error); // Execute the async function
   }, [provider]); // This effect runs only when the provider changes
-
-  const domain: TypedDataDomain = {
-    name: "Verifiable Credential",
-    version: "1",
-    chainId: sepolia.id, // Sepolia testnet
-  };
 
   const registries = {
     mainnet: "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b",
@@ -151,10 +188,89 @@ function App() {
       return;
     }
     const verificationResponseVar = await resolver.resolve(
-      "did:ethr:sepolia:" + await signer.address
+      "did:ethr:sepolia:" + (await signer.address)
     );
     console.log("Verification Response:", verificationResponseVar);
     setVerificationResponse(JSON.stringify(verificationResponseVar, null, 4));
+  }
+
+  async function verifyVC() {
+    if (!resolver) {
+      console.error("Resolver not set");
+      return;
+    }
+    const classVerifier = new Eip712Verifier();
+    const verifiedVC = await verifyCredential(
+      vcJwt,
+      resolver,
+      undefined,
+      classVerifier
+    );
+    setValidationState(JSON.stringify(verifiedVC, null, 4));
+    setDecodedJwt(JSON.stringify(decodeJWT(vcJwt), null, 4));
+    // const verifiedVC = await verifyJWT(vcJwt, { resolver, audience: "did:ethr:sepolia:" + selectedAccount }, classVerifier);
+    // console.log(verifiedVC);
+    // setValidationState(JSON.stringify(verifiedVC, null, 4));
+  }
+
+  async function createVP() {
+    if (!signer) {
+      console.error("Not connected to MetaMask");
+
+      return;
+    }
+
+    const classSigner = new Eip712Signer(signer.signer);
+
+    const issuer = {
+      did: "did:ethr:sepolia:" + signer.address,
+
+      alg: "EIP712",
+
+      signer: classSigner,
+    } as Issuer;
+
+    const vpPayload: JwtPresentationPayload = {
+      vp: {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+
+        type: ["VerifiablePresentation"],
+
+        verifiableCredential: [vcJwt],
+      },
+
+      domain,
+    };
+
+    const vpJwt = await createVerifiablePresentationJwt(vpPayload, issuer);
+
+    setVpJwt(vpJwt);
+  }
+
+  async function verifyVP() {
+    if (!resolver) {
+      console.error("Resolver not set");
+
+      return;
+    }
+
+    const classVerifier = new Eip712Verifier();
+
+    const verifiedVP = await verifyPresentation(
+      vpJwt,
+
+      resolver,
+
+      undefined,
+
+      classVerifier
+    );
+
+    console.log(verifiedVP);
+
+    setValidationStateVp(JSON.stringify(verifiedVP, null, 4));
+
+    setDecodedVp(JSON.stringify(decodeJWT(vpJwt), null, 4));
   }
 
   return (
@@ -170,7 +286,9 @@ function App() {
           <h3>Select an account:</h3>
           {/* Now we map over our 'accounts' state which has the address readily available */}
           {accounts.map((accountInfo) => (
-            <div key={accountInfo.address}> {/* The key is now synchronous and safe */}
+            <div key={accountInfo.address}>
+              {" "}
+              {/* The key is now synchronous and safe */}
               <label htmlFor={accountInfo.address}>
                 <input
                   type="radio"
@@ -194,6 +312,57 @@ function App() {
           {verificationResponse && <pre>{verificationResponse}</pre>}
         </div>
       )}
+
+      <div style={{ marginBottom: "20px" }}></div>
+      <button
+        onClick={() => {
+          if (!signer) {
+            console.error("Not connected");
+            return;
+          }
+          prepareVCCreation(signer)
+            .then((result) => {
+              if (!result) {
+                console.error("Failed to create VC");
+                return;
+              }
+              const { vcJwt, issuer } = result;
+              setVcJwt(vcJwt);
+              setDecodedVcJwt(JSON.stringify(decodeJWT(vcJwt), null, 4));
+              console.log("VC JWT:", vcJwt);
+              console.log("Issuer:", issuer);
+            })
+            .catch(console.error);
+        }}
+      >
+        VC Creation
+      </button>
+      <div style={{ marginBottom: "20px" }}></div>
+      <text>{vcJwt}</text>
+      <div style={{ marginBottom: "20px" }}></div>
+      <button onClick={verifyVC}>Validate VC</button>
+
+      <div style={{ marginBottom: "20px" }}></div>
+      <text>{validationState}</text>
+      <div style={{ marginBottom: "20px" }}></div>
+      <text>{decodedJwt}</text>
+      <div style={{ marginBottom: "20px" }}></div>
+      <button onClick={createVP}>Create VP</button>
+      <div style={{ marginBottom: "20px" }}></div>
+      <text>{vpJwt}</text>
+      <div style={{ marginBottom: "20px" }}></div>
+
+      <div style={{ marginBottom: "20px" }}></div>
+
+      <button onClick={verifyVP}>Validate VP</button>
+
+      <div style={{ marginBottom: "20px" }}></div>
+
+      <text>{validationStateVp}</text>
+
+      <div style={{ marginBottom: "20px" }}></div>
+
+      <text>{decodedVp}</text>
     </>
   );
 }
