@@ -4,10 +4,10 @@ A React application for demonstrating Decentralized Identifiers (DIDs), Verifiab
 
 ## Features
 
-- Connect to Metamask with an account.
-- Resolve DID of account to DID Document
-- Create and verify Verifiable Credentials with EIP-712
-- Create and verify Verifiable Presentations with EIP-712
+- Connect to any wallet compatible with WalletConnect.
+- Resolve DID of account to DID Document.
+- Create and verify Verifiable Credentials with EIP-712.
+- Create and verify Verifiable Presentations with EIP-712.
 
 ## Tech Stack
 - React & Typescript.
@@ -24,7 +24,12 @@ A React application for demonstrating Decentralized Identifiers (DIDs), Verifiab
   ```bash
   pnpm install
   ```
-3. Start the development server
+3. You will need a Reown Appkit Project ID, you can get it [here](https://dashboard.reown.com/sign-in)
+4. Create a .env.local file with that previous ID.
+  ```bash
+  VITE_PROJECT_ID=....
+  ```
+5. Start the development server
   ```bash
   pnpm run dev
   ```
